@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import TaskForm from './components/TaskForm.js'
 import { useAuth } from "react-oidc-context";
 import {
   AppBar,
@@ -31,6 +32,7 @@ function App() {
     status: "PENDING"
   });
   const [error, setError] = useState("");
+  const [teamMembers, setTeamMembers] = useState([]);
 
   const API_URLS = {
     fetchTask: "https://71aos5nio2.execute-api.eu-west-1.amazonaws.com/getTask",
@@ -51,24 +53,24 @@ function App() {
   }, [auth.isAuthenticated]);
 
   const fetchUserRole = () => {
-    // In a real application, this would come from your authentication system
-    // For now, we'll check if the user's email contains 'admin'
-    const role = auth.user?.profile.email.includes('admin') ? 'ADMIN' : 'MEMBER';
-    setUserRole(role);
-  };
+  // In a real application, this would come from your authentication system
+  // Check if the user's username is 'admin'
+  const role = auth.user?.profile["cognito:username"] === 'admin' ? 'ADMIN' : 'MEMBER';
+  setUserRole(role);
+};
 
-  const isAdmin = () => userRole === 'ADMIN';
+const isAdmin = () => userRole === 'ADMIN';
 
-  const fetchUsers = async () => {
-    try {
-      const response = await axios.get(API_URLS.fetchUsers, {
-        headers: { Authorization: `Bearer ${auth.user?.access_token}` },
-      });
-      setUsers(response.data);
-    } catch (err) {
-      setError("Failed to fetch users");
-    }
-  };
+const fetchUsers = async () => {
+  try {
+    const response = await axios.get(API_URLS.fetchUsers, {
+      headers: { Authorization: `Bearer ${auth.user?.access_token}` },
+    });
+    setUsers(response.data);
+  } catch (err) {
+    setError("Failed to fetch users");
+  }
+};
 
   const fetchTasks = async () => {
   try {
@@ -79,7 +81,7 @@ function App() {
     
 
     const response = await fetch(url);
-    console.log(await response.json())
+    //console.log(await response.json())
 
     if (!response.ok) {
       throw new Error(`Error: ${response.status}`);
@@ -88,10 +90,29 @@ function App() {
     const data = await response.json();
     setTasks(data);
   } catch (err) {
+      console.log(err)
     setError(err.message || "Failed to fetch tasks");
   }
 };
 
+
+
+const fetchTeamMembers = async () => {
+        try {
+            const response = await fetch('https://vwjwg4yut4.execute-api.eu-west-1.amazonaws.com/user');
+            if (!response.ok) {
+                throw new Error('Failed to fetch team members');
+            }
+            const data = await response.json();
+            console.log(data)
+            console.log(data.users)
+            const members = data.users.filter((user) => user);
+            console.log({members})
+            setTeamMembers(members);
+        } catch (error) {
+            setError(error.message);
+        }
+    };
 
   const handleCreateTask = async () => {
     if (!isAdmin()) return;
@@ -148,55 +169,72 @@ function App() {
     }
   };
 
+    useEffect(() => {
+        fetchTeamMembers();
+    }, []);
+
   const AdminTaskCreation = () => (
-    <Grid item xs={12} md={6}>
-      <Typography variant="h5">Create Task</Typography>
-      <TextField
-        fullWidth
-        label="Title"
-        value={newTask.title}
-        onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-        margin="normal"
-      />
-      <TextField
-        fullWidth
-        label="Description"
-        value={newTask.description}
-        onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-        margin="normal"
-      />
-      <FormControl fullWidth margin="normal">
-        <InputLabel>Assignee</InputLabel>
-        <Select
-          value={newTask.assignee}
-          onChange={(e) => setNewTask({ ...newTask, assignee: e.target.value })}
-        >
-          {users.map((user) => (
-            <MenuItem key={user.email} value={user.email}>
-              {user.email}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-      <TextField
-        fullWidth
-        type="date"
-        label="Deadline"
-        value={newTask.deadline}
-        onChange={(e) => setNewTask({ ...newTask, deadline: e.target.value })}
-        margin="normal"
-        InputLabelProps={{ shrink: true }}
-      />
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={handleCreateTask}
-        sx={{ mt: 2 }}
+    
+  <Grid item xs={12} md={6}>
+    <TaskForm />
+    <Typography variant="h5">Create Task</Typography>
+    
+    {/* Title Input */}
+    <TextField
+      fullWidth
+      label="Title"
+      value={newTask.title}
+      onChange={(e) => setNewTask((prevTask) => ({ ...prevTask, title: e.target.value }))}
+      margin="normal"
+    />
+    
+    {/* Description Input */}
+    <TextField
+      fullWidth
+      label="Description"
+      value={newTask.description}
+      onChange={(e) => setNewTask((prevTask) => ({ ...prevTask, description: e.target.value }))}
+      margin="normal"
+    />
+    
+    {/* Assignee Select */}
+    <FormControl fullWidth margin="normal">
+      <InputLabel>Assignee</InputLabel>
+      <Select
+        value={newTask.assignee}
+        onChange={(e) => setNewTask((prevTask) => ({ ...prevTask, assignee: e.target.value }))}
       >
-        Create Task
-      </Button>
-    </Grid>
-  );
+        {teamMembers.map((user) => (
+          <MenuItem key={user.email} value={user.email}>
+            {user.email}
+          </MenuItem>
+        ))}
+      </Select>
+    </FormControl>
+    
+    {/* Deadline Input */}
+    <TextField
+      fullWidth
+      type="date"
+      label="Deadline"
+      value={newTask.deadline}
+      onChange={(e) => setNewTask((prevTask) => ({ ...prevTask, deadline: e.target.value }))}
+      margin="normal"
+      InputLabelProps={{ shrink: true }}
+    />
+    
+    {/* Create Task Button */}
+    <Button
+      variant="contained"
+      color="primary"
+      onClick={handleCreateTask}
+      sx={{ mt: 2 }}
+    >
+      Create Task
+    </Button>
+  </Grid>
+);
+
 
   const TaskList = () => (
     <Grid item xs={12} md={isAdmin() ? 6 : 12}>
