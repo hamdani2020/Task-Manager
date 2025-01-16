@@ -1,8 +1,10 @@
 import React, { useRef, useState, useEffect } from "react";
 import axios from "axios";
+import './index.css'
 import TaskForm from './components/TaskForm.js'
 import { useAuth } from "react-oidc-context";
-import { Alert, Snackbar } from "@mui/material"; // Add these imports
+import { Alert, Snackbar } from "@mui/material";
+import LandingPage from './components/LandingPage.js'// Add these imports
 import {
   AppBar,
   Toolbar,
@@ -350,20 +352,20 @@ const fetchTeamMembers = async () => {
 
 
   const TaskList = () => (
-    <Grid
+    <div style={{ margin: '20px'}}>
+      <Typography variant="h5" gutterBottom>
+        {isAdmin() ? "All Tasks" : "My Tasks"}
+      </Typography>
+
+    <div
       item
       xs={12}
       md={isAdmin() ? 6 : 12}
       sx={!isAdmin() ? { marginTop: 4 }: {}}
-      container
-      direction="row"
-      spacing={2}
-      justifyContent={isAdmin() ? "flex-start" : "flex-start"}
+      
       wrap="wrap"
     >
-      <Typography variant="h5" gutterBottom>
-        {isAdmin() ? "All Tasks" : "My Tasks"}
-      </Typography>
+      <div className="" style={{ display: 'flex'}}>
       {tasks.length === 0 ? (
         <Typography>No tasks available</Typography>
       ) : (
@@ -422,7 +424,12 @@ const fetchTeamMembers = async () => {
           </Card>
         ))
       )}
-    </Grid>
+      </div>
+     
+      
+    </div>
+    </div>
+    
   );
 
 
@@ -430,14 +437,7 @@ const fetchTeamMembers = async () => {
     return <Typography variant="h6">Loading...</Typography>;
   }
 
-  if (auth.error) {
-    return (
-      <Typography variant="h6" color="error">
-        Encountering error... {auth.error.message}
-      </Typography>
-    );
-  }
-
+  
   if (auth.isAuthenticated) {
     return (
       <div>
