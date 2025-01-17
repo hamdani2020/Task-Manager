@@ -7,12 +7,13 @@ import {
     CardTitle,
 } from "@/components/ui/card"
 import { Button } from "./ui/button"
+import { isDeadlineApproaching, isDeadlinePassed } from "@/utils/utils"
 
 const TaskCard = ({...props}) => {
     const {title, description, status, deadline, assignee} = props
 
     return (
-        <Card>
+        <Card className={`${isDeadlinePassed(deadline) && "bg-red-400/20"} ${isDeadlineApproaching(deadline) && "bg-yellow-500/20 "}`}>
             <CardHeader>
                 <CardTitle>{title}</CardTitle>
                 <CardDescription>{description}</CardDescription>

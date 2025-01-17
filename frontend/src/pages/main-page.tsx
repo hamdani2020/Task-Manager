@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button"
+import { Toaster } from "@/components/ui/toaster"
 import { Link, Outlet } from "react-router-dom"
 
 const MainPage = () => {
@@ -11,6 +12,7 @@ const MainPage = () => {
             <div>
                 <Outlet />
             </div>
+            <Toaster />
         </div>
     )
 }

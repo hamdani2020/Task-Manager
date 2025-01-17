@@ -266,11 +266,6 @@ const fetchTeamMembers = async () => {
   console.log(result);
 };
 
-// Example usage:
-
-
-
-
   const handleDeleteTask = async (taskId) => {
   if (!isAdmin()) return;
   try {
